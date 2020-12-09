@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:key="preference_license"
+        android:title="ライセンス">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="io.github.takusan23.dougasyusyusya"
+            android:targetClass="io.github.takusan23.dougasyusyusya.Activity.LicenseActivity" />
+    </Preference>
+</PreferenceScreen>

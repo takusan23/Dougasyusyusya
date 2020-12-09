@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/activity_main_bottom_nav_menu_download"
+        android:icon="@drawable/ic_outline_cloud_download_24"
+        android:title="ダウンロード" />
+    <item
+        android:id="@+id/activity_main_bottom_nav_menu_file"
+        android:icon="@drawable/ic_outline_folder_24"
+        android:title="ファイル一覧" />
+    <item
+        android:id="@+id/activity_main_bottom_nav_setting"
+        android:icon="@drawable/ic_outline_settings_24"
+        android:title="設定" />
+</menu>
