@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import io.github.takusan23.dougasyusyusya.Fragment.SettingFragment
 import io.github.takusan23.dougasyusyusya.ViewModel.DownloadFragment
 import io.github.takusan23.dougasyusyusya.ViewModel.FileListFragment
 import io.github.takusan23.dougasyusyusya.ViewModel.regexUrl
@@ -38,15 +39,12 @@ class MainActivity : AppCompatActivity() {
             val fragment = when (it.itemId) {
                 R.id.activity_main_bottom_nav_menu_download -> DownloadFragment()
                 R.id.activity_main_bottom_nav_menu_file -> FileListFragment()
-                R.id.activity_main_bottom_nav_setting -> {
-                    // 検索Fragment
-                    SearchPreferenceFragment().apply {
-                        arguments = Bundle().apply {
-                            // 最初に表示するリソースID
-                            putInt(SearchPreferenceChildFragment.PREFERENCE_XML_RESOURCE_ID, R.xml.preference)
-                            val map = hashMapOf<String,Int>()
-                            putSerializable(SearchPreferenceFragment.PREFERENCE_XML_FRAGMENT_NAME_HASH_MAP, map)
-                        }
+                R.id.activity_main_bottom_nav_setting -> SettingFragment().apply {
+                    arguments = Bundle().apply {
+                        // 最初に表示するリソースID
+                        putInt(SearchPreferenceChildFragment.PREFERENCE_XML_RESOURCE_ID, R.xml.preference)
+                        val map = hashMapOf<String, Int>()
+                        putSerializable(SearchPreferenceFragment.PREFERENCE_XML_FRAGMENT_NAME_HASH_MAP, map)
                     }
                 }
                 else -> DownloadFragment()

@@ -273,6 +273,7 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
         val mediaDescriptionCompat = MediaDescriptionCompat.Builder().apply {
             setTitle(title)
             setSubtitle(subTitle)
+            setIconBitmap(MediaAccess.getThumb(this@VideoMediaBrowserService, videoId.toLong()))
             setMediaId(videoId)
         }.build()
         return MediaBrowserCompat.MediaItem(mediaDescriptionCompat, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE)

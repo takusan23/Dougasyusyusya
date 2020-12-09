@@ -48,7 +48,7 @@ class DownloadService : Service() {
         super.onCreate()
 
         // 通知を発行する
-        createNotification("サービス準備")
+        createNotification("サービス準備中。少し待ってね")
 
         // broadcast
         registerReceiver(broadcastReceiver, IntentFilter().apply {
