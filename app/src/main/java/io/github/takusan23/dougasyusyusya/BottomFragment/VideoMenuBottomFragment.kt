@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
-import io.github.takusan23.dougasyusyusya.ViewModel.FileListFragment
-import io.github.takusan23.dougasyusyusya.ViewModel.FileListFragmentViewModel
+import io.github.takusan23.dougasyusyusya.ViewModel.VideoListFragment
+import io.github.takusan23.dougasyusyusya.ViewModel.ViewoListFragmentViewModel
 import io.github.takusan23.dougasyusyusya.databinding.BottomFragmentVideoMenuBinding
 
 /**
@@ -18,8 +18,8 @@ class VideoMenuBottomFragment : BottomSheetDialogFragment() {
 
     private lateinit var bottomFragmentVideoMenuBinding: BottomFragmentVideoMenuBinding
 
-    /** ViewModel */
-    private val viewModel by viewModels<FileListFragmentViewModel>({ requireParentFragment() })
+    /** ViewModel。[VideoListFragment]のViewModelを利用している */
+    private val viewModel by viewModels<ViewoListFragmentViewModel>({ requireParentFragment() })
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         bottomFragmentVideoMenuBinding = BottomFragmentVideoMenuBinding.inflate(inflater)
@@ -34,6 +34,7 @@ class VideoMenuBottomFragment : BottomSheetDialogFragment() {
 
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuPlayMusicTextview.setOnClickListener {
             // こっから再生
+            viewModel.startVideo(videoData)
         }
 
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuAudioConvertTextview.setOnClickListener {

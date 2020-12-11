@@ -35,7 +35,7 @@ class DownloadFragment : Fragment() {
             pasteURL()
         }
 
-
+        // 動画URL
         viewModel.currentDownloadURL.observe(viewLifecycleOwner) { url ->
             fragmentDownloadBinding.fragmentDownloadUrlEdittext.setText(url)
         }

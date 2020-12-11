@@ -16,7 +16,7 @@
         android:drawablePadding="5dp"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"
-        android:padding="10dp"
+        android:padding="15dp"
         android:text="ここから音楽モードで再生" />
 
     <TextView
@@ -28,7 +28,7 @@
         android:drawablePadding="5dp"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"
-        android:padding="10dp"
+        android:padding="15dp"
         android:text="MP3へ変換" />
 
     <TextView
@@ -40,7 +40,7 @@
         android:drawablePadding="5dp"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"
-        android:padding="10dp"
+        android:padding="15dp"
         android:text="削除" />
 
 </LinearLayout>

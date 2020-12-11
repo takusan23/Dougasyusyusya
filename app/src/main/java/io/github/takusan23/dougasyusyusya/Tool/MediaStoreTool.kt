@@ -12,32 +12,30 @@ import android.provider.MediaStore
 import android.system.Os.close
 import android.util.Size
 import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * MediaStoreとかややこしいんだよ
+ *
+ * MediaStore関係。長くなるので切り出した。
  * */
 object MediaStoreTool {
 
     /**
-     * 動画一覧を取得する。
+     * 動画一覧を取得する。コルーチンになりました。
      * @param context Context
      * */
-    fun getVideoList(context: Context): ArrayList<VideoDataClass> {
+    suspend fun getVideoList(context: Context): ArrayList<VideoDataClass> = withContext(Dispatchers.IO) {
         val list = arrayListOf<VideoDataClass>()
         // 動画を取り出す
         val query = if (Build.VERSION_CODES.Q <= Build.VERSION.SDK_INT) {
-            // todo media store なおす
             context.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 null,
-                null,
-                null,
-
-/*
                 "relative_path = ?",
                 arrayOf("${Environment.DIRECTORY_MOVIES}/DougaSyuSyuSya/"), // READ_EXTERNAL_STORAGE権限なければこれもいらない(自分のファイルしか見れないため)
-*/
-                null
+                null,
             )
         } else {
             context.contentResolver.query(
@@ -45,7 +43,7 @@ object MediaStoreTool {
                 null,
                 null,
                 null,
-                null
+                null,
             )
         }
         query?.apply {
@@ -66,7 +64,7 @@ object MediaStoreTool {
             }
             close()
         }
-        return list
+        return@withContext list
     }
 
     /**
@@ -130,9 +128,9 @@ object MediaStoreTool {
      * 動画を消す
      * @param context その名の通り
      * @param uri Uri
-     * @param id 下位互換のため？
+     * @param id Uriだけじゃ削除できねえのかよ。まじでMediaStoreつかえな
      * */
-    fun deleteMedia(context: Context, uri: Uri,id: Long) {
+    fun deleteMedia(context: Context, uri: Uri, id: Long) {
         context.contentResolver.delete(uri, "_id = ?", arrayOf(id.toString()))
     }
 

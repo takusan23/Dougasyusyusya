@@ -7,19 +7,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import io.github.takusan23.dougasyusyusya.BottomFragment.VideoMenuBottomFragment
 import io.github.takusan23.dougasyusyusya.R
-import io.github.takusan23.dougasyusyusya.ViewModel.FileListFragmentViewModel
+import io.github.takusan23.dougasyusyusya.ViewModel.ViewoListFragmentViewModel
 
 /**
  * 動画一覧Fragmentで使うやつ
+ * @param viewModel 一覧表示で使う
+ * @param childFragmentManager [VideoMenuBottomFragment]を表示させるだけでなく、
+ * [VideoMenuBottomFragment]と[io.github.takusan23.dougasyusyusya.ViewModel.VideoListFragment]でViewModelを共有する。[androidx.fragment.app.Fragment.getChildFragmentManager]が必要
  * */
-class VideoListAdapter(private val viewModel: FileListFragmentViewModel,val parentFragmentManager:FragmentManager) : RecyclerView.Adapter<VideoListAdapter.ViewHolder>() {
+class VideoListAdapter(private val viewModel: ViewoListFragmentViewModel, private val childFragmentManager: FragmentManager) : RecyclerView.Adapter<VideoListAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val parent = itemView.findViewById<ConstraintLayout>(R.id.adapter_parent)
@@ -49,12 +50,13 @@ class VideoListAdapter(private val viewModel: FileListFragmentViewModel,val pare
 
             // めにゅー
             menuButton.setOnClickListener {
-               val menuBottomFragment = VideoMenuBottomFragment().apply {
-                   arguments = Bundle().apply {
-                       putSerializable("data",videoData)
-                   }
-               }
-                menuBottomFragment.show(parentFragmentManager,"menu")
+                val menuBottomFragment = VideoMenuBottomFragment().apply {
+                    arguments = Bundle().apply {
+                        putSerializable("data", videoData)
+                    }
+                }
+                // childのほうのFragmentManagerが必要
+                menuBottomFragment.show(childFragmentManager, "menu")
             }
 
         }

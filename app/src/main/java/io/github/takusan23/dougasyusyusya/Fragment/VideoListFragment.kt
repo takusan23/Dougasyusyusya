@@ -1,7 +1,6 @@
 package io.github.takusan23.dougasyusyusya.ViewModel
 
 import android.content.ComponentName
-import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -13,17 +12,16 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.github.takusan23.dougasyusyusya.Adapter.VideoListAdapter
-import io.github.takusan23.dougasyusyusya.R
 import io.github.takusan23.dougasyusyusya.Service.VideoMediaBrowserService
 import io.github.takusan23.dougasyusyusya.databinding.FragmentFileListBinding
 
 /**
- * ファイル一覧Fragment
+ * ダウンロード一覧Fragment
  * */
-class FileListFragment : Fragment() {
+class VideoListFragment : Fragment() {
 
     /** ViewModel */
-    private val viewModel by viewModels<FileListFragmentViewModel>()
+    private val viewModel by viewModels<ViewoListFragmentViewModel>()
 
     lateinit var adapter: VideoListAdapter
 
@@ -49,16 +47,28 @@ class FileListFragment : Fragment() {
         initMediaSession()
 
         // 音楽再生
-        viewModel.selectVideo.observe()
+        viewModel.selectVideo.observe(viewLifecycleOwner) { data ->
+            mediaControllerCompat?.transportControls?.playFromMediaId(data.id.toString(), null)
+        }
 
         // 一覧表示
         viewModel.videoList.observe(viewLifecycleOwner) { videoList ->
             adapter.notifyDataSetChanged()
         }
 
+        // くるくる
+        viewModel.loadingVideoList.observe(viewLifecycleOwner) { isLoading ->
+            viewBinding.fragmentFileListSwipeRefresh.isRefreshing = isLoading
+        }
+
         // 音楽再生
         viewBinding.fragmentFileListFab.setOnClickListener {
             mediaControllerCompat?.transportControls?.play()
+        }
+
+        // 一覧更新
+        viewBinding.fragmentFileListSwipeRefresh.setOnRefreshListener {
+            viewModel.loadVideoList()
         }
 
     }
@@ -84,13 +94,13 @@ class FileListFragment : Fragment() {
     }
 
     private fun initRecyclerView() {
-        adapter = VideoListAdapter(viewModel,parentFragmentManager)
+        adapter = VideoListAdapter(viewModel, childFragmentManager)
         viewBinding.fragmentFileListRecyclerview.apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context)
             val itemDecoration = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
             addItemDecoration(itemDecoration)
-            adapter = this@FileListFragment.adapter
+            adapter = this@VideoListFragment.adapter
         }
     }
 
