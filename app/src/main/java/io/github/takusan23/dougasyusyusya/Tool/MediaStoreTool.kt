@@ -52,6 +52,7 @@ object MediaStoreTool {
                 // idを取ってUriを取る
                 val id = getLong(getColumnIndex(MediaStore.Video.Media._ID))
                 val title = getString(getColumnIndex(MediaStore.Video.Media.TITLE))
+                val extension = getString(getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)).split(".")[1]
                 // uri取得
                 val uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
                 val thumb = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -60,7 +61,7 @@ object MediaStoreTool {
                     // 動作未検証
                     MediaStore.Video.Thumbnails.getThumbnail(context.contentResolver, id, MediaStore.Video.Thumbnails.MICRO_KIND, BitmapFactory.Options())
                 }
-                list.add(VideoDataClass(title, id, uri, thumb))
+                list.add(VideoDataClass(title, id, uri, thumb, extension))
             }
             close()
         }
@@ -96,6 +97,7 @@ object MediaStoreTool {
                 // idを取ってUriを取る
                 val id = getLong(getColumnIndex(MediaStore.Video.Media._ID))
                 val title = getString(getColumnIndex(MediaStore.Video.Media.TITLE))
+                val extension = getString(getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)).split(".")[1]
                 // uri取得
                 val uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
                 val thumb = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -104,7 +106,7 @@ object MediaStoreTool {
                     // 動作未検証
                     MediaStore.Video.Thumbnails.getThumbnail(context.contentResolver, id, MediaStore.Video.Thumbnails.MICRO_KIND, BitmapFactory.Options())
                 }
-                list.add(VideoDataClass(title, id, uri, thumb))
+                list.add(VideoDataClass(title, id, uri, thumb, extension))
             }
             close()
         }

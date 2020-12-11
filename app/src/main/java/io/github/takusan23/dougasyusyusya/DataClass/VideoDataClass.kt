@@ -13,5 +13,6 @@ data class VideoDataClass(
     val title: String,
     val id: Long,
     val uri: Uri,
-    val thumb: Bitmap?
-):Serializable
+    val thumb: Bitmap?,
+    val extension: String
+) : Serializable

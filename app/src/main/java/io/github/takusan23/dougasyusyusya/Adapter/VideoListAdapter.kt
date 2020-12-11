@@ -52,7 +52,7 @@ class VideoListAdapter(private val viewModel: ViewoListFragmentViewModel, privat
             menuButton.setOnClickListener {
                 val menuBottomFragment = VideoMenuBottomFragment().apply {
                     arguments = Bundle().apply {
-                        putSerializable("data", videoData)
+                        putInt("pos",position)
                     }
                 }
                 // childのほうのFragmentManagerが必要

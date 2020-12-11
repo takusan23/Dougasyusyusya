@@ -29,7 +29,7 @@
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"
         android:padding="15dp"
-        android:text="MP3へ変換" />
+        android:text="音楽ファイル（AAC）へ変換" />
 
     <TextView
         android:id="@+id/bottom_fragment_video_menu_delete_textview"

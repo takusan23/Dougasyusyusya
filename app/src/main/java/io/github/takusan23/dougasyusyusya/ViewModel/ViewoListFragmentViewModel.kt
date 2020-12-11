@@ -1,11 +1,13 @@
 package io.github.takusan23.dougasyusyusya.ViewModel
 
 import android.app.Application
+import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
+import io.github.takusan23.dougasyusyusya.Tool.AudioExtractor
 import io.github.takusan23.dougasyusyusya.Tool.MediaStoreTool
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,6 +64,14 @@ class ViewoListFragmentViewModel(application: Application) : AndroidViewModel(ap
     /** 音楽モードを指定の動画から再生する場合に利用する */
     fun startVideo(videoDataClass: VideoDataClass) {
         selectVideo.value = videoDataClass
+    }
+
+    fun videoToAudio(uri: Uri) {
+        viewModelScope.launch {
+            val extractor = AudioExtractor(context, uri)
+            extractor.extractor()
+            Toast.makeText(context, "AAC形式に変換しました", Toast.LENGTH_SHORT).show()
+        }
     }
 
 }

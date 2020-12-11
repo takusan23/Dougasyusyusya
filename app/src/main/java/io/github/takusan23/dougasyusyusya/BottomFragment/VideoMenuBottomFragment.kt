@@ -30,7 +30,11 @@ class VideoMenuBottomFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 動画情報
-        val videoData = requireArguments().getSerializable("data") as VideoDataClass
+        val videoData = viewModel.videoList.value?.get(requireArguments().getInt("pos"))
+        if (videoData == null) {
+            dismiss()
+            return
+        }
 
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuPlayMusicTextview.setOnClickListener {
             // こっから再生
@@ -39,6 +43,7 @@ class VideoMenuBottomFragment : BottomSheetDialogFragment() {
 
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuAudioConvertTextview.setOnClickListener {
             // 音楽変換
+            viewModel.videoToAudio(videoData.uri)
         }
 
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuDeleteTextview.setOnClickListener {

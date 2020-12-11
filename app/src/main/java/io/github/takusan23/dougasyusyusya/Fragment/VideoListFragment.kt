@@ -73,6 +73,7 @@ class VideoListFragment : Fragment() {
 
     }
 
+    /** [VideoMediaBrowserService]と接続する */
     private fun initMediaSession() {
         mediaBrowserCompat = MediaBrowserCompat(requireContext(), ComponentName(requireContext(), VideoMediaBrowserService::class.java), object : MediaBrowserCompat.ConnectionCallback() {
             override fun onConnected() {
@@ -88,11 +89,13 @@ class VideoListFragment : Fragment() {
         mediaBrowserCompat?.connect()
     }
 
+    /** あとしまつ */
     override fun onDestroy() {
         super.onDestroy()
         mediaBrowserCompat?.disconnect()
     }
 
+    /** RecyclerView用意 */
     private fun initRecyclerView() {
         adapter = VideoListAdapter(viewModel, childFragmentManager)
         viewBinding.fragmentFileListRecyclerview.apply {
