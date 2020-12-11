@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:divider="@color/black"
+    android:orientation="vertical"
+    android:showDividers="end|middle">
+
+    <TextView
+        android:id="@+id/bottom_fragment_video_menu_play_music_textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:drawableStart="@drawable/ic_outline_audiotrack_24"
+        android:drawablePadding="5dp"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:padding="10dp"
+        android:text="ここから音楽モードで再生" />
+
+    <TextView
+        android:id="@+id/bottom_fragment_video_menu_audio_convert_textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:drawableStart="@drawable/ic_outline_extension_24"
+        android:drawablePadding="5dp"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:padding="10dp"
+        android:text="MP3へ変換" />
+
+    <TextView
+        android:id="@+id/bottom_fragment_video_menu_delete_textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:drawableStart="@drawable/ic_outline_delete_24"
+        android:drawablePadding="5dp"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:padding="10dp"
+        android:text="削除" />
+
+</LinearLayout>

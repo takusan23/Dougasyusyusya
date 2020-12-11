@@ -16,7 +16,7 @@ import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
 /**
  * MediaStoreとかややこしいんだよ
  * */
-object MediaAccess {
+object MediaStoreTool {
 
     /**
      * 動画一覧を取得する。
@@ -26,11 +26,17 @@ object MediaAccess {
         val list = arrayListOf<VideoDataClass>()
         // 動画を取り出す
         val query = if (Build.VERSION_CODES.Q <= Build.VERSION.SDK_INT) {
+            // todo media store なおす
             context.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 null,
+                null,
+                null,
+
+/*
                 "relative_path = ?",
                 arrayOf("${Environment.DIRECTORY_MOVIES}/DougaSyuSyuSya/"), // READ_EXTERNAL_STORAGE権限なければこれもいらない(自分のファイルしか見れないため)
+*/
                 null
             )
         } else {
@@ -118,6 +124,16 @@ object MediaAccess {
             MediaStore.Video.Thumbnails.getThumbnail(context.contentResolver, id, MediaStore.Video.Thumbnails.MICRO_KIND, BitmapFactory.Options())
         }
 
+    }
+
+    /**
+     * 動画を消す
+     * @param context その名の通り
+     * @param uri Uri
+     * @param id 下位互換のため？
+     * */
+    fun deleteMedia(context: Context, uri: Uri,id: Long) {
+        context.contentResolver.delete(uri, "_id = ?", arrayOf(id.toString()))
     }
 
 }

@@ -2,12 +2,10 @@ package io.github.takusan23.dougasyusyusya.Service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -21,11 +19,11 @@ import androidx.preference.PreferenceManager
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.source.TrackGroupArray
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
 import io.github.takusan23.dougasyusyusya.R
-import io.github.takusan23.dougasyusyusya.Tool.MediaAccess
+import io.github.takusan23.dougasyusyusya.Tool.MediaStoreTool
 
 class VideoMediaBrowserService : MediaBrowserServiceCompat() {
 
@@ -64,7 +62,7 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                     // 最後に聞いた曲を探す
                     val lastPlayMediaId = prefSettings.getLong("last_play_id", -1)
                     if (lastPlayMediaId != -1L) {
-                        val video = MediaAccess.getVideo(this@VideoMediaBrowserService, lastPlayMediaId)
+                        val video = MediaStoreTool.getVideo(this@VideoMediaBrowserService, lastPlayMediaId)
                         val mediaItem = MediaItem.Builder().apply {
                             setMediaId(video.id.toString())
                             setUri(video.uri)
@@ -73,7 +71,7 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                         mediaItemList.add(mediaItem)
                     }
                     // その他も
-                    MediaAccess.getVideoList(this@VideoMediaBrowserService).forEach { video ->
+                    MediaStoreTool.getVideoList(this@VideoMediaBrowserService).forEach { video ->
                         val mediaItem = MediaItem.Builder().apply {
                             setMediaId(video.id.toString())
                             setUri(video.uri)
@@ -83,9 +81,12 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                     }
                     // 重複消す
                     mediaItemList.distinctBy { mediaItem -> mediaItem.mediaId }
-                    // ExoPlayerへ
-                    exoPlayer.setMediaItems(mediaItemList)
-                    exoPlayer.prepare()
+                    // 中身空っぽなら起動しない
+                    if(mediaItemList.isNotEmpty()){
+                        // ExoPlayerへ
+                        exoPlayer.setMediaItems(mediaItemList)
+                        exoPlayer.prepare()
+                    }
                 }
 
 
@@ -144,6 +145,13 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                 updateState()
                 showNotification()
             }
+
+            override fun onTracksChanged(trackGroups: TrackGroupArray, trackSelections: TrackSelectionArray) {
+                super.onTracksChanged(trackGroups, trackSelections)
+                updateState()
+                showNotification()
+            }
+
         })
 
     }
@@ -154,6 +162,9 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
      * MediaSessionのsetCallBackで扱う操作([MediaSessionCompat.Callback.onPlay]など)も[PlaybackStateCompat.Builder.setState]に書かないと何も起きない
      * */
     private fun updateState() {
+        // 再生中なければreturn
+        exoPlayer.currentMediaItem  ?: return
+
         val stateBuilder = PlaybackStateCompat.Builder().apply {
             // 取り扱う操作。とりあえず 再生準備 再生 一時停止 シーク を扱うようにする。書き忘れると何も起きない
             setActions(PlaybackStateCompat.ACTION_PREPARE or PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_PAUSE or PlaybackStateCompat.ACTION_STOP or PlaybackStateCompat.ACTION_SEEK_TO or PlaybackStateCompat.ACTION_STOP or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
@@ -171,7 +182,7 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
             // Android 11 の MediaSession で使われるやつ
             putString(MediaMetadataCompat.METADATA_KEY_TITLE, video.title)
             putString(MediaMetadataCompat.METADATA_KEY_ARTIST, video.title)
-            putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, MediaAccess.getThumb(this@VideoMediaBrowserService, video.id))
+            putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, MediaStoreTool.getThumb(this@VideoMediaBrowserService, video.id))
             putLong(MediaMetadataCompat.METADATA_KEY_DURATION, exoPlayer.duration) // これあるとAndroid 10でシーク使えます
         }.build()
         mediaSessionCompat.setMetadata(mediaMetadataCompat)
@@ -185,6 +196,9 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
 
     /** 通知を表示する */
     private fun showNotification() {
+        // 再生中なければreturn
+        exoPlayer.currentMediaItem  ?: return
+
         // 通知を作成。通知チャンネルのせいで長い
         val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // 通知チャンネル
@@ -273,7 +287,7 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
         val mediaDescriptionCompat = MediaDescriptionCompat.Builder().apply {
             setTitle(title)
             setSubtitle(subTitle)
-            setIconBitmap(MediaAccess.getThumb(this@VideoMediaBrowserService, videoId.toLong()))
+            setIconBitmap(MediaStoreTool.getThumb(this@VideoMediaBrowserService, videoId.toLong()))
             setMediaId(videoId)
         }.build()
         return MediaBrowserCompat.MediaItem(mediaDescriptionCompat, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE)

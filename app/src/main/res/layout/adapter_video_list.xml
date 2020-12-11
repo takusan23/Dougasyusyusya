@@ -13,12 +13,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
         android:gravity="center_vertical"
         android:text="動画タイトル"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/adapter_imageview"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/adapter_menu_imageview"
         app:layout_constraintStart_toEndOf="@+id/adapter_imageview"
         app:layout_constraintTop_toTopOf="@+id/adapter_imageview" />
 
@@ -30,5 +29,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_outline_local_movies_24" />
+
+    <ImageView
+        android:id="@+id/adapter_menu_imageview"
+        android:layout_width="24dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/adapter_textview"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_outline_more_vert_24" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,9 +17,11 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    viewBinding {
-        enabled = true
+    buildFeatures {
+        viewBinding true
     }
+
+   // ndkVersion '21.3.6528147'
 
     buildTypes {
         release {
@@ -50,7 +52,8 @@ dependencies {
     implementation "androidx.preference:preference:1.1.1"
     // 検索PreferenceFragment
     implementation 'com.github.takusan23:SearchPreferenceFragment:1.3.0'
-
+    implementation 'com.github.yausername.youtubedl-android:library:0.12.1'
+    implementation 'com.github.yausername.youtubedl-android:ffmpeg:0.12.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.3.2'
     implementation 'androidx.appcompat:appcompat:1.2.0'

@@ -48,10 +48,15 @@ class FileListFragment : Fragment() {
         // MediaSession初期化
         initMediaSession()
 
+        // 音楽再生
+        viewModel.selectVideo.observe()
+
+        // 一覧表示
         viewModel.videoList.observe(viewLifecycleOwner) { videoList ->
             adapter.notifyDataSetChanged()
         }
 
+        // 音楽再生
         viewBinding.fragmentFileListFab.setOnClickListener {
             mediaControllerCompat?.transportControls?.play()
         }
@@ -79,7 +84,7 @@ class FileListFragment : Fragment() {
     }
 
     private fun initRecyclerView() {
-        adapter = VideoListAdapter(viewModel)
+        adapter = VideoListAdapter(viewModel,parentFragmentManager)
         viewBinding.fragmentFileListRecyclerview.apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context)
