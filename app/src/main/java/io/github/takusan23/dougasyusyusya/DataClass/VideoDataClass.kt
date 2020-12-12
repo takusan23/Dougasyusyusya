@@ -11,6 +11,7 @@ import java.io.Serializable
  * */
 data class VideoDataClass(
     val title: String,
+    val fileName: String,
     val id: Long,
     val uri: Uri,
     val thumb: Bitmap?,

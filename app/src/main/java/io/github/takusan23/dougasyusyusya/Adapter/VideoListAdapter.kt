@@ -27,6 +27,7 @@ class VideoListAdapter(private val viewModel: ViewoListFragmentViewModel, privat
         val imageView = itemView.findViewById<ImageView>(R.id.adapter_imageview)
         val textView = itemView.findViewById<TextView>(R.id.adapter_textview)
         val menuButton = itemView.findViewById<ImageView>(R.id.adapter_menu_imageview)
+        val subTextView = itemView.findViewById<TextView>(R.id.adapter_sub_textview)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -41,7 +42,10 @@ class VideoListAdapter(private val viewModel: ViewoListFragmentViewModel, privat
             val context = textView.context
 
             textView.text = videoData.title
+            subTextView.text = videoData.extension
             imageView.setImageBitmap(videoData.thumb)
+
+
             // 押したら動画再生アプリ起動
             parent.setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW, videoData.uri)

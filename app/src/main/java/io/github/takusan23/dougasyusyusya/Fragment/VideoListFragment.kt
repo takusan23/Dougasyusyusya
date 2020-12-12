@@ -1,9 +1,13 @@
 package io.github.takusan23.dougasyusyusya.ViewModel
 
 import android.content.ComponentName
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,8 +16,11 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.github.takusan23.dougasyusyusya.Adapter.VideoListAdapter
+import io.github.takusan23.dougasyusyusya.Fragment.MusicFragment
+import io.github.takusan23.dougasyusyusya.R
 import io.github.takusan23.dougasyusyusya.Service.VideoMediaBrowserService
 import io.github.takusan23.dougasyusyusya.databinding.FragmentFileListBinding
+import kotlinx.coroutines.*
 
 /**
  * ダウンロード一覧Fragment
@@ -73,26 +80,57 @@ class VideoListFragment : Fragment() {
 
     }
 
+    /** [io.github.takusan23.dougasyusyusya.Fragment.MusicFragment]を置く関数 */
+    private fun setMusicFragment() {
+        childFragmentManager.beginTransaction().apply {
+            replace(R.id.fragment_video_list_music_list_framelayout, MusicFragment())
+            commit()
+        }
+    }
+
     /** [VideoMediaBrowserService]と接続する */
     private fun initMediaSession() {
         mediaBrowserCompat = MediaBrowserCompat(requireContext(), ComponentName(requireContext(), VideoMediaBrowserService::class.java), object : MediaBrowserCompat.ConnectionCallback() {
             override fun onConnected() {
                 super.onConnected()
-                if (mediaBrowserCompat != null) {
+                if (mediaBrowserCompat != null && isAdded) {
                     mediaControllerCompat = MediaControllerCompat(requireContext(), mediaBrowserCompat!!.sessionToken)
+
+                    // ActivityとMediaBrowserServiceを連携
+                    MediaControllerCompat.setMediaController(requireActivity(), mediaControllerCompat)
+
+                    // 音楽Fragment設置
+                    setMusicFragment()
+
                     // とりあえずprepareを呼ぶ
-                    mediaControllerCompat?.transportControls?.prepare()
+                    val mediaController = MediaControllerCompat.getMediaController(requireActivity())
+                    mediaController?.transportControls?.prepare()
+
+                    mediaController?.registerCallback(object : MediaControllerCompat.Callback() {
+                        /** 音楽変わったら */
+                        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+                            super.onMetadataChanged(metadata)
+                            viewBinding.fragmentVideoListMusicListTitleTextview.text = metadata?.getText(MediaMetadataCompat.METADATA_KEY_TITLE)
+                            viewBinding.fragmentVideoListMusicListImageview.setImageBitmap(metadata?.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART))
+                        }
+                    })
+
                 }
             }
         }, null)
-        // 接続
+
         mediaBrowserCompat?.connect()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // 接続
+        mediaBrowserCompat?.disconnect()
     }
 
     /** あとしまつ */
     override fun onDestroy() {
         super.onDestroy()
-        mediaBrowserCompat?.disconnect()
     }
 
     /** RecyclerView用意 */

@@ -1,7 +1,6 @@
 package io.github.takusan23.dougasyusyusya.ViewModel
 
 import android.app.Application
-import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -23,6 +22,9 @@ class ViewoListFragmentViewModel(application: Application) : AndroidViewModel(ap
 
     /** 動画配列 */
     val videoList = MutableLiveData(arrayListOf<VideoDataClass>())
+
+    /** [io.github.takusan23.dougasyusyusya.BottomFragment.VideoMenuBottomFragment]を閉じるLiveData。データ型は正直何でも良かった */
+    val bottomFragmentCloseLiveData = MutableLiveData<String>()
 
     /** 動画読み込み開始LiveData */
     val loadingVideoList = MutableLiveData<Boolean>()
@@ -66,11 +68,12 @@ class ViewoListFragmentViewModel(application: Application) : AndroidViewModel(ap
         selectVideo.value = videoDataClass
     }
 
-    fun videoToAudio(uri: Uri) {
+    fun videoToAudio(videoDataClass: VideoDataClass) {
         viewModelScope.launch {
-            val extractor = AudioExtractor(context, uri)
+            val extractor = AudioExtractor(context, videoDataClass.uri, videoDataClass.title, "aac")
             extractor.extractor()
             Toast.makeText(context, "AAC形式に変換しました", Toast.LENGTH_SHORT).show()
+            bottomFragmentCloseLiveData.postValue("close")
         }
     }
 

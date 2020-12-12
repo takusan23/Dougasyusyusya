@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.database.CursorIndexOutOfBoundsException
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -49,115 +50,169 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
     /** 読み込んだ曲リスト */
     private val playList = arrayListOf<VideoDataClass>()
 
+    /** 最初の動画配列 */
+    private val initVideoIdList = arrayListOf<Long>()
+
     /** コルーチンの引数に使うやつ。サービス終了と同時にコルーチンも終了させるために使う */
     private val coroutineContext = Job() + Dispatchers.Main
+
+    private val callback = object : MediaSessionCompat.Callback() {
+
+        /** 再生準備 */
+        override fun onPrepare() {
+            super.onPrepare()
+
+            GlobalScope.launch(coroutineContext) {
+                // 動画読み込む
+                val mediaItemList = arrayListOf<MediaItem>()
+                // その他も
+                playList.clear()
+                playList.addAll(MediaStoreTool.getVideoList(this@VideoMediaBrowserService))
+                playList.forEach { video ->
+                    val mediaItem = MediaItem.Builder().apply {
+                        setMediaId(video.id.toString())
+                        setUri(video.uri)
+                        setTag(video) // 動画情報詰めとく
+                    }.build()
+                    mediaItemList.add(mediaItem)
+                }
+
+                // IDだけ控える
+                initVideoIdList.addAll(playList.map { data -> data.id })
+
+                // 中身空っぽなら起動しない
+                if (mediaItemList.isNotEmpty()) {
+                    // ExoPlayerへ
+                    exoPlayer.setMediaItems(mediaItemList)
+                    exoPlayer.prepare()
+
+                    // 最後に聞いた曲を探す。Android 11のMediaResumeのことだよ
+                    val lastPlayMediaId = prefSettings.getLong("last_play_id", -1)
+                    if (lastPlayMediaId != -1L) {
+                        val video = MediaStoreTool.getVideo(this@VideoMediaBrowserService, lastPlayMediaId)
+                        // 最後に聞いてた位置へ移動する
+                        val pos = playList.indexOfFirst { videoDataClass -> videoDataClass.id == video.id }
+                        if (pos != -1) {
+                            // ない可能性を考慮
+                            exoPlayer.seekTo(pos, 0)
+                        }
+                    }
+                }
+
+                // 曲一覧をクライアントへ送信
+                updateQueueItemList()
+            }
+
+        }
+
+        /** 再生 */
+        override fun onPlay() {
+            super.onPlay()
+            startThisService()
+            exoPlayer.playWhenReady = true
+            mediaSessionCompat.isActive = true
+        }
+
+        /** MediaStoreのIdから再生 */
+        override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
+            super.onPlayFromMediaId(mediaId, extras)
+            mediaId ?: return
+            val pos = playList.indexOfFirst { videoDataClass -> videoDataClass.id.toString() == mediaId }
+            if (pos != -1) {
+                exoPlayer.seekTo(pos, 0)
+            }
+            exoPlayer.playWhenReady = true
+        }
+
+        /** 一時停止 */
+        override fun onPause() {
+            super.onPause()
+            exoPlayer.playWhenReady = false
+        }
+
+        /** 止めた時 */
+        override fun onStop() {
+            super.onStop()
+            mediaSessionCompat.isActive = false
+            stopSelf()
+        }
+
+        /** 通知のシーク動かした時 */
+        override fun onSeekTo(pos: Long) {
+            super.onSeekTo(pos)
+            exoPlayer.seekTo(pos)
+        }
+
+        /** 前の曲 */
+        override fun onSkipToPrevious() {
+            super.onSkipToPrevious()
+            exoPlayer.previous()
+        }
+
+        /** 次の曲 */
+        override fun onSkipToNext() {
+            super.onSkipToNext()
+            exoPlayer.next()
+        }
+
+        /** リピートモード変更 */
+        override fun onSetRepeatMode(repeatMode: Int) {
+            super.onSetRepeatMode(repeatMode)
+            // もしかして：この一行必須？
+            mediaSessionCompat.setRepeatMode(repeatMode)
+
+            if (repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) {
+                // 無限ループループする
+                exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+            } else {
+                // 同じ曲を何回も聞く。
+                exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
+            }
+        }
+
+        /** シャッフルモード変更 */
+        override fun onSetShuffleMode(shuffleMode: Int) {
+            super.onSetShuffleMode(shuffleMode)
+            // もしかして：この一行必須？
+            mediaSessionCompat.setShuffleMode(shuffleMode)
+
+            val isShuffleMode = shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL
+            if (isShuffleMode) {
+                // シャッフルモード有効
+                exoPlayer.clearMediaItems()
+                playList.shuffle()
+            } else {
+                // シャッフルもとに戻す
+                exoPlayer.clearMediaItems()
+                playList.sortWith { a, b -> initVideoIdList.indexOf(a.id) - initVideoIdList.indexOf(b.id) }
+            }
+            // ExoPlayerへ追加
+            playList.forEach { video ->
+                val mediaItem = MediaItem.Builder().apply {
+                    setMediaId(video.id.toString())
+                    setUri(video.uri)
+                    setTag(video) // 動画情報詰めとく
+                }.build()
+                exoPlayer.addMediaItem(mediaItem)
+            }
+            // クライアントへ返却
+            mediaSessionCompat.setQueue(playList.map { videoDataClass ->
+                MediaSessionCompat.QueueItem(createMediaDescriptionCompat(videoDataClass.id.toString(), videoDataClass.title, videoDataClass.title), videoDataClass.id)
+            })
+
+        }
+
+    }
 
     override fun onCreate() {
         super.onCreate()
 
-        exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
-
-        mediaSessionCompat = MediaSessionCompat(this, "douga_syu_syu_sya_media_session").apply {
-            // MediaSessionの操作のコールバック
-            setCallback(object : MediaSessionCompat.Callback() {
-
-                /** 再生準備 */
-                override fun onPrepare() {
-                    super.onPrepare()
-
-                    GlobalScope.launch(coroutineContext) {
-                        // 動画読み込む
-                        val mediaItemList = arrayListOf<MediaItem>()
-                        // その他も
-                        playList.clear()
-                        playList.addAll(MediaStoreTool.getVideoList(this@VideoMediaBrowserService))
-                        playList.forEach { video ->
-                            val mediaItem = MediaItem.Builder().apply {
-                                setMediaId(video.id.toString())
-                                setUri(video.uri)
-                                setTag(video) // 動画情報詰めとく
-                            }.build()
-                            mediaItemList.add(mediaItem)
-                        }
-
-                        // 中身空っぽなら起動しない
-                        if (mediaItemList.isNotEmpty()) {
-                            // ExoPlayerへ
-                            exoPlayer.setMediaItems(mediaItemList)
-                            exoPlayer.prepare()
-
-                            // 最後に聞いた曲を探す。Android 11のMediaResumeのことだよ
-                            val lastPlayMediaId = prefSettings.getLong("last_play_id", -1)
-                            if (lastPlayMediaId != -1L) {
-                                val video = MediaStoreTool.getVideo(this@VideoMediaBrowserService, lastPlayMediaId)
-                                // 最後に聞いてた位置へ移動する
-                                val pos = playList.indexOfFirst { videoDataClass -> videoDataClass.id == video.id }
-                                if (pos != -1) {
-                                    // ない可能性を考慮
-                                    exoPlayer.seekTo(pos, 0)
-                                }
-                            }
-
-                        }
-                    }
-
-                }
-
-                /** 再生 */
-                override fun onPlay() {
-                    super.onPlay()
-                    startThisService()
-                    exoPlayer.playWhenReady = true
-                    isActive = true
-                }
-
-                /** 一時停止 */
-                override fun onPause() {
-                    super.onPause()
-                    exoPlayer.playWhenReady = false
-                }
-
-                /** 通知のシーク動かした時 */
-                override fun onSeekTo(pos: Long) {
-                    super.onSeekTo(pos)
-                    exoPlayer.seekTo(pos)
-                }
-
-                /** 止めた時 */
-                override fun onStop() {
-                    super.onStop()
-                    isActive = false
-                    stopSelf()
-                }
-
-                /** 前の曲 */
-                override fun onSkipToPrevious() {
-                    super.onSkipToPrevious()
-                    exoPlayer.previous()
-                }
-
-                /** 次の曲 */
-                override fun onSkipToNext() {
-                    super.onSkipToNext()
-                    exoPlayer.next()
-                }
-
-                /** MediaStoreのIdから再生 */
-                override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
-                    super.onPlayFromMediaId(mediaId, extras)
-                    mediaId ?: return
-                    val pos = playList.indexOfFirst { videoDataClass -> videoDataClass.id.toString() == mediaId }
-                    if (pos != -1) {
-                        exoPlayer.seekTo(pos, 0)
-                    }
-                    exoPlayer.playWhenReady = true
-                }
-
-            })
-
-            // 忘れずに
-            setSessionToken(sessionToken)
-        }
+        mediaSessionCompat = MediaSessionCompat(this, "douga_syu_syu_sya_media_session")
+        sessionToken = mediaSessionCompat.sessionToken
+        // MediaSessionの操作のコールバック
+        mediaSessionCompat.setCallback(callback)
+        // でふぉで全曲ループ
+        mediaSessionCompat.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
 
         // ExoPlayerの再生状態が更新されたときも通知を更新する
         exoPlayer.addListener(object : Player.EventListener {
@@ -183,17 +238,29 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
 
     }
 
+
+    /**
+     * クライアントへ曲一覧を返すときに使う関数
+     *
+     * クライアント側の[android.support.v4.media.session.MediaControllerCompat.Callback.onQueueChanged]が呼ばれる
+     * */
+    private fun updateQueueItemList() {
+        mediaSessionCompat.setQueue(playList.mapIndexed { index, videoDataClass ->
+            MediaSessionCompat.QueueItem(createMediaDescriptionCompat(videoDataClass.id.toString(), videoDataClass.title, videoDataClass.title), videoDataClass.id)
+        })
+    }
+
     /**
      * 再生状態とメタデータを設定する。今回はメタデータはハードコートする
      *
      * MediaSessionのsetCallBackで扱う操作([MediaSessionCompat.Callback.onPlay]など)も[PlaybackStateCompat.Builder.setState]に書かないと何も起きない
      * */
     private fun updateState() {
-        // 再生中なければreturn
+        // 再生中可能ではないならreturn
         exoPlayer.currentMediaItem ?: return
 
         val stateBuilder = PlaybackStateCompat.Builder().apply {
-            // 取り扱う操作。とりあえず 再生準備 再生 一時停止 シーク を扱うようにする。書き忘れると何も起きない
+            // 取り扱う操作。
             setActions(
                 PlaybackStateCompat.ACTION_PREPARE
                         or PlaybackStateCompat.ACTION_PLAY
@@ -201,10 +268,12 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                         or PlaybackStateCompat.ACTION_PAUSE
                         or PlaybackStateCompat.ACTION_STOP
                         or PlaybackStateCompat.ACTION_SEEK_TO
-                        or PlaybackStateCompat.ACTION_STOP
                         or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
                         or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        or PlaybackStateCompat.ACTION_SET_REPEAT_MODE
+                        or PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE
             )
+
             // 再生してるか。ExoPlayerを参照
             val state = if (exoPlayer.isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED
             // 位置
@@ -236,8 +305,8 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
 
     /** 通知を表示する */
     private fun showNotification() {
-        // 再生中なければreturn
-        exoPlayer.currentMediaItem ?: return
+        // 再生中可能ではない + 再生ボタンを押していない 場合は return
+        if (exoPlayer.currentMediaItem == null && !mediaSessionCompat.isActive) return
 
         // 通知を作成。通知チャンネルのせいで長い
         val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -317,6 +386,8 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
             val lastPlayArtist = prefSettings.getString("last_play_artist", "") ?: return
             // 動画情報いれる
             result.sendResult(arrayListOf(createMediaItem(lastPlayMediaId, lastPlayTitle, lastPlayArtist)))
+        } else {
+            result.sendResult(mutableListOf())
         }
     }
 
@@ -324,13 +395,20 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
      * [onLoadChildren]で返すアイテムを作成する
      * */
     private fun createMediaItem(videoId: String, title: String, subTitle: String): MediaBrowserCompat.MediaItem {
-        val mediaDescriptionCompat = MediaDescriptionCompat.Builder().apply {
+        return MediaBrowserCompat.MediaItem(createMediaDescriptionCompat(videoId, title, subTitle), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE)
+    }
+
+    /**
+     * [android.support.v4.media.MediaBrowserCompat.MediaItem]とか[android.support.v4.media.session.MediaSessionCompat.QueueItem]で使う
+     * [MediaDescriptionCompat]を返す関数
+     * */
+    private fun createMediaDescriptionCompat(videoId: String, title: String, subTitle: String): MediaDescriptionCompat {
+        return MediaDescriptionCompat.Builder().apply {
             setTitle(title)
             setSubtitle(subTitle)
             setIconBitmap(MediaStoreTool.getThumb(this@VideoMediaBrowserService, videoId.toLong()))
             setMediaId(videoId)
         }.build()
-        return MediaBrowserCompat.MediaItem(mediaDescriptionCompat, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE)
     }
 
     /** お片付け */

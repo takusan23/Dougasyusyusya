@@ -1,11 +1,14 @@
 package io.github.takusan23.dougasyusyusya
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import io.github.takusan23.dougasyusyusya.Fragment.SettingFragment
 import io.github.takusan23.dougasyusyusya.ViewModel.DownloadFragment
@@ -30,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(activityMainViewBinding.root)
 
         // 権限リクエスト。Android 9以前のユーザーのみ
-        if (Build.VERSION_CODES.P >= Build.VERSION.SDK_INT) {
+        if (Build.VERSION_CODES.P >= Build.VERSION.SDK_INT && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             permissionResultCallback.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         }
 

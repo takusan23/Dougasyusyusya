@@ -19,11 +19,13 @@
             android:name=".Service.VideoMediaBrowserService"
             android:enabled="true"
             android:exported="true"
-            android:label="連続再生">
+            android:label="音楽モード">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
-        </service> <!-- これ書かないと通知から操作一生こない -->
+        </service>
+
+        <!-- これ書かないと通知から操作一生こない -->
         <receiver android:name="androidx.media.session.MediaButtonReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />

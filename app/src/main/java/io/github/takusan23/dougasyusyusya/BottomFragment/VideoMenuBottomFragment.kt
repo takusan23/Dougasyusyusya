@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
 import io.github.takusan23.dougasyusyusya.ViewModel.VideoListFragment
 import io.github.takusan23.dougasyusyusya.ViewModel.ViewoListFragmentViewModel
 import io.github.takusan23.dougasyusyusya.databinding.BottomFragmentVideoMenuBinding
@@ -36,6 +35,11 @@ class VideoMenuBottomFragment : BottomSheetDialogFragment() {
             return
         }
 
+        // 終了LiveData
+        viewModel.bottomFragmentCloseLiveData.observe(viewLifecycleOwner) {
+            dismiss()
+        }
+
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuPlayMusicTextview.setOnClickListener {
             // こっから再生
             viewModel.startVideo(videoData)
@@ -43,7 +47,7 @@ class VideoMenuBottomFragment : BottomSheetDialogFragment() {
 
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuAudioConvertTextview.setOnClickListener {
             // 音楽変換
-            viewModel.videoToAudio(videoData.uri)
+            viewModel.videoToAudio(videoData)
         }
 
         bottomFragmentVideoMenuBinding.bottomFragmentVideoMenuDeleteTextview.setOnClickListener {
