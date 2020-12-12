@@ -11,14 +11,17 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.github.takusan23.dougasyusyusya.Adapter.VideoListAdapter
 import io.github.takusan23.dougasyusyusya.Fragment.MusicFragment
 import io.github.takusan23.dougasyusyusya.R
 import io.github.takusan23.dougasyusyusya.Service.VideoMediaBrowserService
+import io.github.takusan23.dougasyusyusya.Tool.MotionLayoutTool
 import io.github.takusan23.dougasyusyusya.databinding.FragmentFileListBinding
 import kotlinx.coroutines.*
 
@@ -53,6 +56,8 @@ class VideoListFragment : Fragment() {
         // MediaSession初期化
         initMediaSession()
 
+        setMusicUIVisibility(false)
+
         // 音楽再生
         viewModel.selectVideo.observe(viewLifecycleOwner) { data ->
             mediaControllerCompat?.transportControls?.playFromMediaId(data.id.toString(), null)
@@ -70,7 +75,15 @@ class VideoListFragment : Fragment() {
 
         // 音楽再生
         viewBinding.fragmentFileListFab.setOnClickListener {
-            mediaControllerCompat?.transportControls?.play()
+            if (MediaControllerCompat.getMediaController(requireActivity()).playbackState.state == PlaybackStateCompat.STATE_PAUSED) {
+                // 再生へ
+                mediaControllerCompat?.transportControls?.play()
+                setMusicUIVisibility(true)
+            } else {
+                // 終了へ
+                mediaControllerCompat?.transportControls?.pause()
+                setMusicUIVisibility(false)
+            }
         }
 
         // 一覧更新
@@ -85,6 +98,20 @@ class VideoListFragment : Fragment() {
         childFragmentManager.beginTransaction().apply {
             replace(R.id.fragment_video_list_music_list_framelayout, MusicFragment())
             commit()
+        }
+    }
+
+    /** 音楽UIを表示させるかどうか */
+    private fun setMusicUIVisibility(isVisible: Boolean) {
+        if (isVisible) {
+            viewBinding.fragmentFileListFab.show()
+            viewBinding.fragmentFileListFab.text = "音楽モード終了"
+            viewBinding.fragmentVideoListMusicListBackground.visibility = View.VISIBLE
+        } else {
+            // BottomSheet閉じる
+            viewBinding.fragmentFileListFab.text = "音楽モード"
+            BottomSheetBehavior.from(viewBinding.fragmentVideoListMusicListBackground).state = BottomSheetBehavior.STATE_COLLAPSED
+            viewBinding.fragmentVideoListMusicListBackground.visibility = View.INVISIBLE
         }
     }
 
@@ -104,7 +131,6 @@ class VideoListFragment : Fragment() {
 
                     // 音楽操作
                     val mediaController = MediaControllerCompat.getMediaController(requireActivity())
-
                     mediaController?.registerCallback(object : MediaControllerCompat.Callback() {
                         /** 音楽変わったら */
                         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
@@ -112,14 +138,26 @@ class VideoListFragment : Fragment() {
                             viewBinding.fragmentVideoListMusicListTitleTextview.text = metadata?.getText(MediaMetadataCompat.METADATA_KEY_TITLE)
                             viewBinding.fragmentVideoListMusicListImageview.setImageBitmap(metadata?.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART))
                         }
+
+                        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+                            super.onPlaybackStateChanged(state)
+                            // 再生中ならUI表示
+                            if (mediaController.playbackState?.state == PlaybackStateCompat.STATE_PLAYING) {
+                                setMusicUIVisibility(true)
+                            }
+                        }
+
                     })
 
                     if (mediaController?.playbackState?.state == null) {
                         // 初回時
-                        mediaController?.transportControls?.prepare()
+                        // とりあえずprepareよぶ
+                        mediaControllerCompat?.transportControls?.prepare()
                     } else {
                         // すでに再生中
-                        mediaController.transportControls?.play()
+                        if (mediaController.playbackState?.state == PlaybackStateCompat.STATE_PLAYING) {
+                            setMusicUIVisibility(true)
+                        }
                         viewBinding.fragmentVideoListMusicListTitleTextview.text = mediaController.metadata.getText(MediaMetadataCompat.METADATA_KEY_TITLE)
                         viewBinding.fragmentVideoListMusicListImageview.setImageBitmap(mediaController.metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART))
                     }
@@ -136,6 +174,10 @@ class VideoListFragment : Fragment() {
         super.onDestroy()
         // 切断
         mediaBrowserCompat?.disconnect()
+        // 音楽UIない場合はService終了
+        if (viewBinding.fragmentVideoListMusicListBackground.visibility == View.INVISIBLE) {
+            mediaControllerCompat?.transportControls?.stop()
+        }
     }
 
     /** RecyclerView用意 */

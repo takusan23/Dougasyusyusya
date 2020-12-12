@@ -40,9 +40,16 @@ class MainActivity : AppCompatActivity() {
         // Fragment置き換え
         activityMainViewBinding.activityMainBottomNav.setOnNavigationItemSelectedListener {
             val fragment = when (it.itemId) {
-                R.id.activity_main_bottom_nav_menu_download -> DownloadFragment()
-                R.id.activity_main_bottom_nav_menu_file -> VideoListFragment()
+                R.id.activity_main_bottom_nav_menu_download -> {
+                    supportActionBar?.title = "ダウンロード"
+                    DownloadFragment()
+                }
+                R.id.activity_main_bottom_nav_menu_file -> {
+                    supportActionBar?.title = "ファイル一覧"
+                    VideoListFragment()
+                }
                 R.id.activity_main_bottom_nav_setting -> SettingFragment().apply {
+                    supportActionBar?.title = "設定"
                     arguments = Bundle().apply {
                         // 最初に表示するリソースID
                         putInt(SearchPreferenceChildFragment.PREFERENCE_XML_RESOURCE_ID, R.xml.preference)

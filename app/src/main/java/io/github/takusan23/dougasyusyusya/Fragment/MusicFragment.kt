@@ -188,16 +188,18 @@ class MusicFragment : Fragment() {
         lifecycleScope.launch {
             while (true) {
                 delay(500)
-                val duration = mediaControllerCompat?.metadata!!.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000L
-                val progress = mediaControllerCompat?.playbackState!!.position / 1000
-                // テキスト
-                musicBinding.apply {
-                    fragmentMusicDuration.text = DateUtils.formatElapsedTime(duration)
-                    fragmentMusicCurrent.text = DateUtils.formatElapsedTime(progress)
-                    fragmentMusicSeekbar.max = duration.toInt()
-                    // プログレスバー
-                    if (!isTouchingSeekBar) {
-                        fragmentMusicSeekbar.progress = progress.toInt()
+                if(mediaControllerCompat?.metadata != null){
+                    val duration = mediaControllerCompat?.metadata!!.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000L
+                    val progress = mediaControllerCompat?.playbackState!!.position / 1000
+                    // テキスト
+                    musicBinding.apply {
+                        fragmentMusicDuration.text = DateUtils.formatElapsedTime(duration)
+                        fragmentMusicCurrent.text = DateUtils.formatElapsedTime(progress)
+                        fragmentMusicSeekbar.max = duration.toInt()
+                        // プログレスバー
+                        if (!isTouchingSeekBar) {
+                            fragmentMusicSeekbar.progress = progress.toInt()
+                        }
                     }
                 }
             }

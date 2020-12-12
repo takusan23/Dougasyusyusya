@@ -2,6 +2,7 @@ package io.github.takusan23.dougasyusyusya.Service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.database.CursorIndexOutOfBoundsException
@@ -24,6 +25,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
+import io.github.takusan23.dougasyusyusya.MainActivity
 import io.github.takusan23.dougasyusyusya.R
 import io.github.takusan23.dougasyusyusya.Tool.MediaStoreTool
 import kotlinx.coroutines.*
@@ -373,6 +375,7 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
 
             setStyle(androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(mediaSessionCompat.sessionToken).setShowActionsInCompactView(1, 2, 3))
             setSmallIcon(R.drawable.syu_syu_sya)
+            setContentIntent(PendingIntent.getActivity(this@VideoMediaBrowserService, 2525, Intent(this@VideoMediaBrowserService, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT))
             // 通知領域に置くボタン
             addAction(NotificationCompat.Action(R.drawable.ic_baseline_clear_24, "停止", MediaButtonReceiver.buildMediaButtonPendingIntent(this@VideoMediaBrowserService, PlaybackStateCompat.ACTION_STOP)))
             addAction(NotificationCompat.Action(R.drawable.ic_outline_skip_previous_24, "前の曲", MediaButtonReceiver.buildMediaButtonPendingIntent(this@VideoMediaBrowserService, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)))
