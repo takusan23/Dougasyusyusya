@@ -7,6 +7,7 @@ import android.content.Intent
 import android.database.CursorIndexOutOfBoundsException
 import android.os.Build
 import android.os.Bundle
+import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -26,6 +27,7 @@ import io.github.takusan23.dougasyusyusya.DataClass.VideoDataClass
 import io.github.takusan23.dougasyusyusya.R
 import io.github.takusan23.dougasyusyusya.Tool.MediaStoreTool
 import kotlinx.coroutines.*
+import java.util.*
 
 class VideoMediaBrowserService : MediaBrowserServiceCompat() {
 
@@ -200,6 +202,36 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                 MediaSessionCompat.QueueItem(createMediaDescriptionCompat(videoDataClass.id.toString(), videoDataClass.title, videoDataClass.title), videoDataClass.id)
             })
 
+            // これひっす
+            exoPlayer.prepare()
+            exoPlayer.seekTo(0, 0)
+
+        }
+
+        /** 曲の移動 */
+        override fun onCustomAction(action: String?, extras: Bundle?) {
+            super.onCustomAction(action, extras)
+            if (action == "move") {
+
+                // 移動
+                val from = extras?.getInt("from") ?: return
+                val to = extras.getInt("to")
+
+                // ExoPlayerでも移動ができるようになった
+                exoPlayer.moveMediaItem(from, to)
+
+                // 配列更新
+                playList.clear()
+                repeat(exoPlayer.mediaItemCount) { i ->
+                    val item = exoPlayer.getMediaItemAt(i).playbackProperties?.tag as VideoDataClass
+                    playList.add(item)
+                }
+
+                // キューに追加
+                mediaSessionCompat.setQueue(playList.map { videoDataClass ->
+                    MediaSessionCompat.QueueItem(createMediaDescriptionCompat(videoDataClass.id.toString(), videoDataClass.title, videoDataClass.title), videoDataClass.id)
+                })
+            }
         }
 
     }
@@ -228,8 +260,8 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                 showNotification()
             }
 
-            override fun onTracksChanged(trackGroups: TrackGroupArray, trackSelections: TrackSelectionArray) {
-                super.onTracksChanged(trackGroups, trackSelections)
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                super.onMediaItemTransition(mediaItem, reason)
                 updateState()
                 showNotification()
             }
@@ -273,7 +305,12 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
                         or PlaybackStateCompat.ACTION_SET_REPEAT_MODE
                         or PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE
             )
-
+            /**
+             * 曲の移動用に書いた。
+             * Bundleにfrom、toを入れてね。
+             * Queueの更新はありません
+             * */
+            addCustomAction("move", "move", R.drawable.ic_outline_audiotrack_24)
             // 再生してるか。ExoPlayerを参照
             val state = if (exoPlayer.isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED
             // 位置

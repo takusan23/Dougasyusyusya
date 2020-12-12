@@ -94,17 +94,16 @@ class VideoListFragment : Fragment() {
             override fun onConnected() {
                 super.onConnected()
                 if (mediaBrowserCompat != null && isAdded) {
-                    mediaControllerCompat = MediaControllerCompat(requireContext(), mediaBrowserCompat!!.sessionToken)
 
                     // ActivityとMediaBrowserServiceを連携
+                    mediaControllerCompat = MediaControllerCompat(requireContext(), mediaBrowserCompat!!.sessionToken)
                     MediaControllerCompat.setMediaController(requireActivity(), mediaControllerCompat)
 
                     // 音楽Fragment設置
                     setMusicFragment()
 
-                    // とりあえずprepareを呼ぶ
+                    // 音楽操作
                     val mediaController = MediaControllerCompat.getMediaController(requireActivity())
-                    mediaController?.transportControls?.prepare()
 
                     mediaController?.registerCallback(object : MediaControllerCompat.Callback() {
                         /** 音楽変わったら */
@@ -115,6 +114,16 @@ class VideoListFragment : Fragment() {
                         }
                     })
 
+                    if (mediaController?.playbackState?.state == null) {
+                        // 初回時
+                        mediaController?.transportControls?.prepare()
+                    } else {
+                        // すでに再生中
+                        mediaController.transportControls?.play()
+                        viewBinding.fragmentVideoListMusicListTitleTextview.text = mediaController.metadata.getText(MediaMetadataCompat.METADATA_KEY_TITLE)
+                        viewBinding.fragmentVideoListMusicListImageview.setImageBitmap(mediaController.metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART))
+                    }
+
                 }
             }
         }, null)
@@ -122,15 +131,11 @@ class VideoListFragment : Fragment() {
         mediaBrowserCompat?.connect()
     }
 
-    override fun onStop() {
-        super.onStop()
-        // 接続
-        mediaBrowserCompat?.disconnect()
-    }
-
     /** あとしまつ */
     override fun onDestroy() {
         super.onDestroy()
+        // 切断
+        mediaBrowserCompat?.disconnect()
     }
 
     /** RecyclerView用意 */
