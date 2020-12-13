@@ -85,11 +85,11 @@ class MusicFragment : Fragment() {
         }
 
         /**
-         * 曲一覧更新があったら来る。シャッフルとか。並び替えでは呼ばれない
+         * 曲一覧更新があったら来る。シャッフルとか。
          * */
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
             super.onQueueChanged(queue)
-            // 操作中は無視
+            // 操作中は無視。並び替えのときも呼ばれてしまうので
             if (isDraggingRecyclerViewItem) return
 
             // 曲一覧

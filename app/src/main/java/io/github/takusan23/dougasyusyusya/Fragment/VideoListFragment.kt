@@ -56,7 +56,11 @@ class VideoListFragment : Fragment() {
         // MediaSession初期化
         initMediaSession()
 
+        // 音楽UIの表示非表示
         setMusicUIVisibility(false)
+
+        // 音楽UIの展開リスナー
+        setMusicUIListener()
 
         // 音楽再生
         viewModel.selectVideo.observe(viewLifecycleOwner) { data ->
@@ -91,6 +95,35 @@ class VideoListFragment : Fragment() {
             viewModel.loadVideoList()
         }
 
+        // BottomSheet展開
+        viewBinding.fragmentVideoListBottomSheetOpen.setOnClickListener {
+            val bottomSheetBehavior = BottomSheetBehavior.from(viewBinding.fragmentVideoListMusicListBackground)
+            if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                viewBinding.fragmentVideoListBottomSheetOpen.setImageDrawable(requireContext().getDrawable(R.drawable.ic_baseline_expand_more_24))
+            } else {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                viewBinding.fragmentVideoListBottomSheetOpen.setImageDrawable(requireContext().getDrawable(R.drawable.ic_baseline_expand_less_24))
+            }
+        }
+
+    }
+
+    /** 音楽UIを展開したときに呼ばれるリスナーをセット */
+    private fun setMusicUIListener() {
+        BottomSheetBehavior.from(viewBinding.fragmentVideoListMusicListBackground).addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    viewBinding.fragmentVideoListBottomSheetOpen.setImageDrawable(requireContext().getDrawable(R.drawable.ic_baseline_expand_less_24))
+                } else {
+                    viewBinding.fragmentVideoListBottomSheetOpen.setImageDrawable(requireContext().getDrawable(R.drawable.ic_baseline_expand_more_24))
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+
+            }
+        })
     }
 
     /** [io.github.takusan23.dougasyusyusya.Fragment.MusicFragment]を置く関数 */

@@ -1,5 +1,7 @@
 package io.github.takusan23.dougasyusyusya.Adapter
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.view.LayoutInflater
