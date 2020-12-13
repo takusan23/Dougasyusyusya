@@ -42,7 +42,7 @@ object MediaStoreTool {
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 null,
                 "_data like ?",
-                arrayOf("%${Environment.DIRECTORY_MOVIES}/DougaSyuSyuSya/%"), // READ_EXTERNAL_STORAGE権限なければこれもいらない(自分のファイルしか見れないため)
+                arrayOf("%DougaSyuSyuSya%"), // READ_EXTERNAL_STORAGE権限なければこれもいらない(自分のファイルしか見れないため)
                 null,
             )
         }

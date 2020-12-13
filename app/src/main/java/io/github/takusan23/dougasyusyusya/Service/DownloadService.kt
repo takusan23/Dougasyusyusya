@@ -178,7 +178,7 @@ class DownloadService : Service() {
             val videoFile = File(videoFolder, "${videoInfo.title}.${videoInfo.ext}")
             videoFile.outputStream().write(file.inputStream().readBytes())
             // MediaStoreへ差し込む
-            contentValues.put(MediaStore.Video.Media.TITLE, videoInfo.title)
+            contentValues.put(MediaStore.Video.Media.DATA, videoFile.path)
             contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues) ?: return
         }
     }

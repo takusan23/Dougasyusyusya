@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
         // 権限リクエスト。Android 9以前のユーザーのみ
         if (Build.VERSION_CODES.P >= Build.VERSION.SDK_INT && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            permissionResultCallback.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            permissionResultCallback.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
 
         // Fragment置き換え
