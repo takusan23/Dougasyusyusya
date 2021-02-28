@@ -420,12 +420,14 @@ class VideoMediaBrowserService : MediaBrowserServiceCompat() {
         // 保険。遅くなると怒られるぽい？
         result.detach()
         if (parentId == ROOT_RECENT) {
-            // 最後に聞いた曲をリクエストしてる
-            val lastPlayTitle = prefSettings.getString("last_play_title", "") ?: return
-            val lastPlayMediaId = prefSettings.getLong("last_play_id", 0).toString()
-            val lastPlayArtist = prefSettings.getString("last_play_artist", "") ?: return
-            // 動画情報いれる
-            result.sendResult(arrayListOf(createMediaItem(lastPlayMediaId, lastPlayTitle, lastPlayArtist)))
+            if (prefSettings.contains("last_play_id")) {
+                // 最後に聞いた曲をリクエストしてる
+                val lastPlayTitle = prefSettings.getString("last_play_title", "") ?: return
+                val lastPlayMediaId = prefSettings.getLong("last_play_id", 0).toString()
+                val lastPlayArtist = prefSettings.getString("last_play_artist", "") ?: return
+                // 動画情報いれる
+                result.sendResult(arrayListOf(createMediaItem(lastPlayMediaId, lastPlayTitle, lastPlayArtist)))
+            }
         } else {
             result.sendResult(mutableListOf())
         }
